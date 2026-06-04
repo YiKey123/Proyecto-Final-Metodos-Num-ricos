@@ -44,6 +44,6 @@ El proyecto está configurado para un despliegue continuo y puede visualizarse d
 
 ## ⚙️ Ejecución Local
 Para ejecutar este proyecto de forma local, no se requieren instalaciones complejas:
-1. Clona este repositorio: `git clone [https://github.com/GiannKalef/[nombre-del-repo].git](https://github.com/YiKey123/Proyecto-Final-Metodos-Num-ricos)`
+1. Clona este repositorio: `git clone (https://github.com/YiKey123/Proyecto-Final-Metodos-Num-ricos.git)`
 2. Navega al directorio del proyecto.
 3. Abre el archivo `index.html` en cualquier navegador web moderno (Chrome, Firefox, Edge, Safari).
