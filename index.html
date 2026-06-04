@@ -7,46 +7,70 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </head>
 <body>
 
 <div class="container py-5">
     <header class="text-center mb-5">
-        <h1 class="display-5 fw-bold text-dark">Simulación de Crisis: Abastecimiento y Precios</h1>
-        <p class="lead text-secondary">Análisis computacional y resolución paso a paso mediante métodos numéricos.</p>
+        <h1 class="display-5 fw-bold text-dark">Simulación de Crisis: Abastecimiento, Precios y Conflicto</h1>
+        <div class="context-base text-start mx-auto mt-4" style="max-width: 800px;">
+            <strong>Contexto General del Proyecto:</strong> En situaciones de crisis social o económica, la incertidumbre altera las cadenas de suministro. Este proyecto aplica métodos numéricos para modelar matemáticamente cómo se distribuyen los recursos bajo estrés, cómo se agotan las reservas estratégicas frente al pánico, y cómo la escasez dispara la inflación de los alimentos, erosionando el poder adquisitivo familiar.
+        </div>
     </header>
 
     <div class="module-card">
-        <h2 class="text-primary mb-3">Escenario A: Optimización del Abastecimiento y Transporte</h2>
+        <h2 class="text-primary mb-3">Escenario A: Optimización del Abastecimiento y Red de Transporte</h2>
         <div class="theory-box">
-            <strong>Representación:</strong> Distribución de carburantes desde 3 plantas hacia 3 zonas de consumo.<br>
-            <strong>Variables:</strong> <code>X_1, X_2, X_3</code> (miles de litros por zona), Matriz <code>A</code> (red de transporte), Vector <code>B</code> (demanda).
+            <strong>Variables del Modelo:</strong><br>
+            <ul>
+                <li><code>X_1, X_2, X_3</code>: Volumen de carburante enviado a la Zona Norte, Centro y Sur.</li>
+                <li><code>Matriz A y Vector B</code>: Representan las capacidades de la red y la demanda por zona.</li>
+                <li><strong>Algoritmo utilizado:</strong> Los métodos iterativos de Jacobi y Gauss-Seidel despejan secuencialmente las incógnitas de la diagonal principal. En cada ciclo, evalúan el error tomando los valores nuevos calculados. El proceso se detiene cuando el error máximo cae por debajo de la tolerancia (0.0001).</li>
+            </ul>
         </div>
 
         <div class="row">
             <div class="col-md-4">
                 <label class="fw-bold">Caso de Prueba:</label>
                 <select id="casoA" class="form-select mb-3" onchange="cargarCasoA()">
-                    <option value="estable">Distribución Estable (Diagonal Dominante)</option>
-                    <option value="bloqueo">Bloqueo en Zona Sur (Sistema Inestable)</option>
+                    <option value="estable">Normal: Rutas despejadas</option>
+                    <option value="bloqueo">Crisis: Rumores y Bloqueo en Zona Sur</option>
                 </select>
 
                 <label class="fw-bold">Método Numérico:</label>
                 <select id="metodoA" class="form-select mb-3">
                     <option value="jacobi">Jacobi</option>
                     <option value="gauss-seidel">Gauss-Seidel</option>
-                    <option value="sor">SOR (w=1.25)</option>
+                    <option value="sor">SOR (Sobrerrelajación)</option>
                 </select>
 
-                <label>Matriz de Red (A):</label>
+                <label>Matriz de Rutas (A):</label>
                 <textarea id="matrizA" class="form-control mb-2" rows="3"></textarea>
                 <label>Demanda (B):</label>
                 <input type="text" id="vectorB" class="form-control mb-3">
-                <button class="btn btn-primary w-100" onclick="resolverA()">Calcular y Ver Proceso</button>
+                <button class="btn btn-primary w-100" onclick="resolverA()">Ejecutar Simulación</button>
             </div>
             <div class="col-md-8">
-                <div id="resultadoA" class="alert alert-info mt-3 mt-md-0">Ejecute la simulación para ver los resultados.</div>
-                <div id="procesoA" class="process-box d-none"></div>
+                <div id="resultadoA" class="alert alert-info mt-3 mt-md-0">Ejecute la simulación para ver la distribución óptima.</div>
+                <div id="interpretacionA" class="graph-explanation d-none mt-2"></div>
+                <div id="procesoA" class="process-box d-none mt-2"></div>
+                
+                <div class="accordion mt-3" id="accA">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseA">Respuestas al Escenario A y F</button></h2>
+                        <div id="collapseA" class="accordion-collapse collapse" data-bs-parent="#accA">
+                            <div class="accordion-body">
+                                <ul>
+                                    <li><strong>¿Cuánto debe enviarse a cada zona?</strong> El resultado del vector X garantiza el cumplimiento exacto de la demanda respetando las capacidades viales.</li>
+                                    <li><strong>¿Qué pasa si una ruta se bloquea?</strong> La matriz pierde dominancia diagonal (coeficientes tienden a cero). Matemáticamente, el sistema diverge por división entre cero.</li>
+                                    <li><strong>¿Qué zona queda más afectada?</strong> Aquella cuya ecuación asociada pierda convergencia debido a los bloqueos.</li>
+                                    <li><strong>¿El sistema es estable?</strong> En crisis, es mal condicionado. Un ligero rumor dispara la demanda, alterando la solución radicalmente.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -54,16 +78,19 @@
     <div class="module-card">
         <h2 class="text-primary mb-3">Escenario B: Vaciado Crítico de Reservas</h2>
         <div class="theory-box">
-            <strong>Representación:</strong> Simulación de la caída de nivel en los tanques de la planta central.<br>
-            <strong>Variables:</strong> <code>R(t)</code> (Reserva), <code>R'(t) = Entrada - Consumo</code> (Tasa de cambio), <code>t</code> (Días).
+            <strong>Variables del Modelo:</strong><br>
+            <ul>
+                <li><code>R(t)</code> y <code>R'(t)</code>: Nivel de reserva total y su tasa de vaciado en base a Entradas menos Consumo.</li>
+                <li><strong>Algoritmo utilizado:</strong> Integración de ecuaciones diferenciales paso a paso. Euler aproxima el siguiente punto usando la pendiente inicial del intervalo. RK4 refina esta predicción calculando y promediando ponderadamente 4 pendientes diferentes dentro del mismo intervalo de tiempo, reduciendo drásticamente el error.</li>
+            </ul>
         </div>
 
         <div class="row">
             <div class="col-md-4">
                 <label class="fw-bold">Caso de Prueba:</label>
                 <select id="casoB" class="form-select mb-3" onchange="cargarCasoB()">
-                    <option value="normal">Consumo Lineal Estable</option>
-                    <option value="panico">Compras de Pánico (Aumento Exponencial)</option>
+                    <option value="normal">Consumo Lineal y Estable</option>
+                    <option value="panico">Pánico: Consumo Exponencial</option>
                 </select>
 
                 <label class="fw-bold">Método Numérico:</label>
@@ -79,19 +106,38 @@
                 <input type="number" id="entradaB" class="form-control mb-2">
                 <label>Consumo Base (Litros):</label>
                 <input type="number" id="consumoB" class="form-control mb-3">
-                <button class="btn btn-primary w-100" onclick="resolverB()">Simular y Ver Proceso</button>
+                <button class="btn btn-primary w-100" onclick="resolverB()">Simular y Graficar</button>
             </div>
             <div class="col-md-8">
                 <canvas id="chartB"></canvas>
-                <div id="procesoB" class="process-box d-none mt-3"></div>
+                <div id="interpretacionB" class="graph-explanation d-none mt-2"></div>
+                <div id="procesoB" class="process-box d-none mt-2"></div>
+                
+                <div class="accordion mt-3" id="accB">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseB">Respuestas al Escenario B</button></h2>
+                        <div id="collapseB" class="accordion-collapse collapse" data-bs-parent="#accB">
+                            <div class="accordion-body">
+                                <ul>
+                                    <li><strong>¿En cuántos días la reserva llega a nivel crítico?</strong> Se observa en el gráfico al intersectar el eje X (0 litros).</li>
+                                    <li><strong>Diferencias de métodos:</strong> RK4 es el más estable para curvas pronunciadas, superando las imprecisiones geométricas del método de Euler.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
     <div class="module-card">
-        <h2 class="text-primary mb-3">Escenarios C y D: Interpolación e Integración de Gastos</h2>
+        <h2 class="text-primary mb-3">Escenarios C y D: Curva de Precios e Integración del Gasto</h2>
         <div class="theory-box">
-            <strong>Representación:</strong> Reconstrucción de la curva de precios y cálculo del gasto total sumando el área bajo la curva.
+            <strong>Variables del Modelo:</strong><br>
+            <ul>
+                <li><code>X (Días)</code> e <code>Y (Precio Bs)</code>: Coordenadas de los precios recopilados empíricamente.</li>
+                <li><strong>Algoritmo utilizado:</strong> Para interpolación, el polinomio de Lagrange crea una función que pasa exactamente por todos los puntos formando términos cruzados. Para la integración, Simpson evalúa el área bajo esa curva trazando pequeños arcos de parábola sobre cada conjunto de 3 puntos.</li>
+            </ul>
         </div>
 
         <div class="row">
@@ -107,17 +153,33 @@
                     <option value="simpson13">Simpson 1/3</option>
                 </select>
 
-                <label>Días Registrados (X):</label>
+                <label>Días con Datos (X):</label>
                 <input type="text" id="xDatosC" class="form-control mb-2" value="1, 5, 10, 15, 20, 30">
                 <label>Precios Registrados (Y):</label>
                 <input type="text" id="yDatosC" class="form-control mb-3" value="45, 55, 70, 85, 110, 150">
-                <button class="btn btn-primary w-100" onclick="resolverCD()">Analizar Curva y Ver Proceso</button>
+                <button class="btn btn-primary w-100" onclick="resolverCD()">Reconstruir Curva y Calcular</button>
                 
-                <div id="resultadoD" class="alert alert-warning mt-3 fw-bold text-center fs-5">Gasto Total: -- Bs</div>
+                <div id="resultadoD" class="alert alert-warning mt-3 fw-bold text-center fs-5">Gasto Mensual: -- Bs</div>
             </div>
             <div class="col-md-8">
                 <canvas id="chartCD"></canvas>
-                <div id="procesoCD" class="process-box d-none mt-3"></div>
+                <div id="interpretacionCD" class="graph-explanation d-none mt-2"></div>
+                <div id="procesoCD" class="process-box d-none mt-2"></div>
+                
+                <div class="accordion mt-3" id="accCD">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCD">Respuestas a los Escenarios C y D</button></h2>
+                        <div id="collapseCD" class="accordion-collapse collapse" data-bs-parent="#accCD">
+                            <div class="accordion-body">
+                                <ul>
+                                    <li><strong>Comportamiento en día sin dato:</strong> La interpolación tiende a mostrar inflación exponencial debido a la crisis.</li>
+                                    <li><strong>Confiabilidad:</strong> Lagrange es peligroso con puntos muy separados (Fenómeno de Runge). Splines sería más real.</li>
+                                    <li><strong>¿Pérdida del poder adquisitivo?</strong> Es la resta del gasto normal sin inflación versus el área integrada total de la crisis.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -125,27 +187,59 @@
     <div class="module-card">
         <h2 class="text-primary mb-3">Escenario E: Búsqueda del Umbral Crítico</h2>
         <div class="theory-box">
-            <strong>Representación:</strong> Determinación del día exacto en que el costo acumulado supera el ingreso familiar (Costo(t) - Ingreso = 0).
+            <strong>Variables del Modelo:</strong><br>
+            <ul>
+                <li><code>f(t) = 0</code>: Función del déficit: Costo Acumulado - Ingreso. La "Raíz" es el día exacto de quiebre financiero.</li>
+                <li><strong>Algoritmo utilizado:</strong> Bisección divide el intervalo [a, b] a la mitad iterativamente hasta "atrapar" el cero. Secante traza una recta secante entre dos puntos para estimar la intersección en el eje X, actualizando los puntos sin usar derivadas.</li>
+            </ul>
         </div>
 
         <div class="row">
             <div class="col-md-4">
-                <label class="fw-bold">Método Numérico:</label>
+                <label class="fw-bold">Método de Búsqueda de Raíz:</label>
                 <select id="metodoE" class="form-select mb-3">
                     <option value="biseccion">Método de Bisección</option>
                     <option value="newton">Newton-Raphson</option>
                     <option value="secante">Método de la Secante</option>
                 </select>
 
-                <label>Ingreso Familiar Límite (Bs):</label>
+                <label>Fondo de Ingreso Límite (Bs):</label>
                 <input type="number" id="ingresoE" class="form-control mb-3" value="1800">
-                <button class="btn btn-primary w-100" onclick="resolverE()">Calcular y Ver Gráfica</button>
+                <button class="btn btn-primary w-100" onclick="resolverE()">Buscar Punto de Quiebre</button>
                 
                 <div id="resultadoE" class="alert alert-danger fs-5 text-center mt-3">Esperando cálculo...</div>
             </div>
             <div class="col-md-8">
                 <canvas id="chartE"></canvas>
-                <div id="procesoE" class="process-box d-none mt-3"></div>
+                <div id="interpretacionE" class="graph-explanation d-none mt-2"></div>
+                <div id="procesoE" class="process-box d-none mt-2"></div>
+                
+                <div class="accordion mt-3" id="accE">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseE">Respuestas al Escenario E</button></h2>
+                        <div id="collapseE" class="accordion-collapse collapse" data-bs-parent="#accE">
+                            <div class="accordion-body">
+                                <ul>
+                                    <li><strong>Robustez vs Velocidad:</strong> Bisección es robusto (siempre converge si hay raíz en el rango), pero lento. Newton es muy rápido pero sensible a la derivada empírica. La Secante ofrece el mejor balance de velocidad y aplicabilidad para modelos económicos.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="module-card bg-light border-0">
+        <h2 class="text-success mb-3">Conclusiones y Limitaciones del Modelo</h2>
+        <div class="row">
+            <div class="col-md-6">
+                <h5>Conclusiones</h5>
+                <p>El modelado demostró cómo el pánico social altera la demanda convirtiendo matrices logísticas estables en sistemas mal condicionados. Además, se comprobó la superioridad analítica de métodos como RK4 frente a Euler para ecuaciones que involucran consumos exponenciales.</p>
+            </div>
+            <div class="col-md-6">
+                <h5>Limitaciones</h5>
+                <p>La dependencia exclusiva de datos históricos aislados vuelve a los polinomios de Lagrange altamente susceptibles a oscilaciones irreales. Asimismo, los métodos de raíces como Newton-Raphson demostraron ser poco prácticos cuando no se posee la derivada exacta del comportamiento social de la crisis.</p>
             </div>
         </div>
     </div>
